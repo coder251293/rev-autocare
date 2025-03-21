@@ -1,0 +1,84 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div class="container mt-5">
+
+ <!-- 🔒 Flash Message for Unauthorized Access -->
+ {% with messages = get_flashed_messages(with_categories=true) %}
+ {% if messages %}
+     {% for category, message in messages %}
+         <div class="alert alert-{{ category }} fade show" role="alert">
+             <i class="fas fa-info-circle"></i> {{ message }}
+             <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+         </div>
+     {% endfor %}
+ {% endif %}
+{% endwith %}
+
+<div class="d-flex justify-content-between align-items-center">
+    <h1>JC AUTO Vehicle Key Monitor</h1>
+    <a href="{{ url_for('vehicle_key_logout') }}" class="btn btn-danger">
+        <i class="fas fa-sign-out-alt"></i> Logout
+    </a>
+</div>
+
+        <!-- Form to add new vehicle key record -->
+        <form method="POST" action="/add_vehicle_key" class="mb-4">
+            <!-- Select Employee Dropdown -->
+            <select name="employee_id" class="form-control mb-2" required>
+                <option value="" disabled selected>Select Employee</option>
+                {% for employee in employees %}
+                    <option value="{{ employee.id }}">{{ employee.name }}</option>
+                {% endfor %}
+            </select>
+        
+            <!-- Enter Last 5 Digits of the Key -->
+            <input type="text" name="key_number" placeholder="Enter Reg or last 5 Digits of Key" class="form-control mb-2" required maxlength="8">
+        
+            <!-- Submit Button -->
+            <button type="submit" class="btn btn-primary">Hand Over Key</button>
+        </form>        
+
+        <hr>
+
+        <a href="/export_vehicle_keys" class="btn btn-success mb-3">Download Excel Report</a>
+        <a href="/previous_key_logs" class="btn btn-secondary mb-3">Previous Key Logs</a>
+        
+        
+        <h3>Vehicle Key Log</h3>
+        <table class="table">
+            <thead>
+                <tr>
+                    <th scope="col">Employee</th>
+                    <th scope="col">Key Number</th>
+                    <th scope="col">Key Checkout Time</th>
+                    <th scope="col">Key Return Time</th>
+                    <th scope="col">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for vehicle_key in vehicle_keys %}
+                <tr>
+                    <td>{{ vehicle_key.employee.name }}</td>  <!-- ✅ Show Employee Name -->
+                    <td>{{ vehicle_key.key_number }}</td>  <!-- ✅ Show Key Number -->
+                    <td>{{ vehicle_key.key_checkout_time.strftime('%d-%m-%Y %H:%M:%S') }}</td>
+                    <td>
+                        {% if vehicle_key.key_return_time %}
+                            {{ vehicle_key.key_return_time.strftime('%d-%m-%Y %H:%M:%S') }}
+                        {% else %}
+                            Not Returned
+                        {% endif %}
+                    </td>                    
+                    <td>
+                        {% if not vehicle_key.key_return_time %}
+                            <a href="/return_vehicle_key/{{ vehicle_key.id }}" class="btn btn-danger">Key Returned</a>
+                        {% else %}
+                            <span class="text-success">Key Returned</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>            
+        </table>
+    </div>
+{% endblock %}

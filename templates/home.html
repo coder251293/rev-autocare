@@ -1,0 +1,76 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div class="container mt-5">
+
+    <!-- 🚀 Modern Hero Section -->
+    <div class="p-5 mb-4 bg-dark text-light rounded-3 text-center shadow">
+        <h1 class="display-4 fw-bold">REV Autocare Management System</h1>
+        <p class="fs-3">Efficiently manage employee attendance and vehicle key accountability with ease.</p>
+        </a>
+    </div>
+
+    <!-- ⚠️ Notification Banner (Improved Visibility) -->
+    <div class="alert alert-warning text-center shadow-sm fs-5" role="alert">
+        <i class="fas fa-exclamation-triangle"></i>
+        <strong>NOTE TO USER:</strong> MAKE SURE YOU LOG ALL KEYS; IF YOU DO NOT, YOU WILL BE LIABLE FOR ANY LOSSES!
+    </div>
+
+    <!-- 📌 Quick Navigation Cards -->
+    <div class="row mt-5">
+
+        <!-- Employee Time Tracker Card -->
+        <div class="col-md-6 mb-4">
+            <div class="card shadow-sm h-100">
+                <div class="card-body text-center">
+                    <i class="fas fa-user-clock fa-4x text-primary mb-3"></i>
+                    <h4 class="card-title">Employee Time Tracker</h4>
+                    <p class="card-text">Manage employee attendance effectively with real-time clock-in and clock-out tracking.</p>
+                    <a href="/employee_time_tracker" class="btn btn-outline-primary bubbly-btn">Time Tracker</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Vehicle Key Monitor Card -->
+        <div class="col-md-6 mb-4">
+            <div class="card shadow-sm h-100">
+                <div class="card-body text-center">
+                    <i class="fas fa-car-key fa-4x text-success mb-3"></i>
+                    <h4 class="card-title">Vehicle Key Monitor</h4>
+                    <p>Log vehicle keys checkout and return clearly, ensuring security and accountability.</p>
+                    <a href="/vehicle_key_monitor" class="btn btn-outline-success bubbly-btn">Key Monitor</a>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- 📝 Informational footer message -->
+    <div class="alert alert-info text-center shadow-sm mt-4 fs-5">
+        Select an option above to start managing the REV Autocare system.
+    </div>
+
+    <!-- ✅ Preserve your existing bubbly button styles -->
+    <style>
+        .bubbly-btn {
+            display: inline-block;
+            border-radius: 30px;
+            padding: 12px 30px;
+            background-color: #007bff;
+            color: white;
+            text-align: center;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+            border: none;
+        }
+
+        .bubbly-btn:hover {
+            background-color: #0056b3;
+            transform: translateY(-5px);
+            box-shadow: 0px 8px 12px rgba(0, 0, 0, 0.2);
+        }
+    </style>
+
+</div>
+{% endblock %}

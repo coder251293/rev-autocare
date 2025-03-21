@@ -1,0 +1,289 @@
+{% extends "layout.html" %}
+
+{% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+        {% for category, message in messages %}
+            <div class="alert alert-{{ category }} fade show" role="alert">
+                <i class="fas fa-info-circle"></i> {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        {% endfor %}
+    {% endif %}
+{% endwith %}
+
+{% block content %}
+    <div class="container mt-5">
+        <div class="text-end">
+            <span id="liveClock" class="fw-bold text-primary"></span>
+        </div>
+        
+        <script>
+            function updateClock() {
+                const now = new Date();
+                document.getElementById("liveClock").innerText = now.toLocaleTimeString();
+            }
+            setInterval(updateClock, 1000);
+            updateClock();
+        </script>        
+        <div class="d-flex justify-content-between">
+            <h1>Admin Dashboard</h1>
+            <a href="{{ url_for('logout') }}" class="btn btn-danger"><i class="fas fa-sign-out-alt"></i> Logout</a>
+        </div>        
+
+        
+        <p>Welcome to the JC AUTO Admin Dashboard! You can manage employees and view their clock-in/out logs here.</p>
+
+        <!-- Add Employee Form -->
+        <form method="POST" action="/admin_dashboard">
+            <input type="text" name="name" placeholder="Employee Name" class="form-control mb-3" required>
+            <button type="submit" class="btn btn-primary">Add Employee</button>
+        </form>
+        
+        <hr>
+
+        <!-- View Employee Logs -->
+        <h3>Employee Logs</h3>
+        <table class="table table-striped table-hover">
+            <thead>
+                <tr>
+                    <th scope="col">Name</th>
+                    <th scope="col">Clock In</th>
+                    <th scope="col">Clock Out</th>
+                    <th scope="col">Total Hours Worked</th>
+                    <th scope="col">Overtime Hours</th>  <!-- New Column for Overtime -->
+
+                </tr>
+            </thead>            
+            <tbody>
+                {% for employee in employees %}
+                <tr data-employee-id="{{ employee.id }}">
+            
+                    <td>{{ employee.name }}</td>
+                    
+                    <!-- Display Last Clock-In -->
+                    <td>
+                        <ul>
+                            {% if employee.sessions %}
+                                {% for session in employee.sessions %}
+                                    <li>{{ session.clock_in.strftime('%A, %d-%m-%Y %H:%M:%S') }}</li>  <!-- Add %A for full weekday name -->
+                                {% endfor %}
+                            {% else %}
+                                <li>No Work Sessions</li>
+                            {% endif %}
+                        </ul>
+                    </td>
+                    
+                    <td>
+                        <ul>
+                            {% if employee.sessions %}
+                                {% for session in employee.sessions %}
+                                    <li>
+                                        {% if session.clock_out %}
+                                            {{ session.clock_out.strftime('%A, %d-%m-%Y %H:%M:%S') }}  <!-- Add %A for full weekday name -->
+                                        {% else %}
+                                            Still Working 
+                                            <button onclick="showClockOutForm('{{ employee.id }}')" class="btn btn-warning btn-sm">
+                                                <i class="fas fa-clock"></i> Manual Clock-Out
+                                            </button>
+                                        {% endif %}
+                                    </li>
+                                {% endfor %}
+                            {% else %}
+                                <li>No Work Sessions</li>
+                            {% endif %}
+                        </ul>
+                    </td>
+                                                                     
+            
+                    <td>
+                        <strong>Total Hours: {{ employee.total_worked_hours }}</strong>
+                    </td>
+
+                    <!-- ✅ New Overtime Hours Column with Color Coding -->
+
+                    <td>
+                        Overtime: 
+                        {% if employee.monthly_overtime > 20 %}
+                            <span class="badge bg-danger">{{ employee.monthly_overtime }} hrs</span>  <!-- 🔴 More than 20 hours -->
+                        {% elif employee.monthly_overtime >= 10 %}
+                            <span class="badge bg-warning text-dark">{{ employee.monthly_overtime }} hrs</span>  <!-- 🟡 10-20 hours -->
+                        {% else %}
+                            <span class="badge bg-success">{{ employee.monthly_overtime }} hrs</span>  <!-- 🟢 Below 10 hours -->
+                        {% endif %}
+                    </td>
+                                                                                                                       
+                    <td>
+                        <!-- Download PDF Button (Clearly Separated) -->
+                        <div class="mb-3">
+                            <a href="/download_employee_pdf/{{ employee.id }}" class="btn btn-secondary btn-lg w-100 py-3">
+                                <i class="fas fa-file-pdf"></i> Download Employee PDF
+                            </a>
+                        </div>                        
+                    
+                        <!-- Delete Logs and Remove Employee Buttons in one line, clearly separated -->
+                        <div class="d-flex justify-content-between gap-2">
+                            <a href="/delete_employee_logs/{{ employee.id }}" class="btn btn-warning flex-fill">
+                                <i class="fas fa-trash-alt"></i> Delete Employee Logs
+                            </a>
+                    
+                            <a href="/remove_employee/{{ employee.id }}" class="btn btn-danger flex-fill">
+                                <i class="fas fa-user-minus"></i> Remove Employee
+                            </a>
+                        </div>
+                    </td>                                                                                                   
+                </tr>
+                {% endfor %}
+            </tbody>
+            </table>
+            <hr>
+
+            <h3>Register Vehicle Key Monitor User</h3>
+            <form method="POST" action="/register_vehicle_key_user">
+                <div class="mb-3">
+                    <label for="username" class="form-label">Username</label>
+                    <input type="text" name="username" class="form-control" required>
+                </div>
+            
+                <div class="mb-3">
+                    <label for="password" class="form-label">Password</label>
+                    <input type="password" name="password" class="form-control" required>
+                </div>
+            
+                <button type="submit" class="btn btn-success">Register User</button>
+            </form>
+            
+            <!-- Display Registered Vehicle Key Users -->
+            <h3>Registered Users for Vehicle Key Monitor</h3>
+            <table class="table table-striped table-hover">
+                <thead>
+                    <tr>
+                        <th scope="col">Username</th>
+                        <th scope="col">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for user in vehicle_key_users %}
+                    <tr>
+                        <td>{{ user.username }}</td>
+                        <td>
+                            <a href="/remove_vehicle_key_user/{{ user.id }}" class="btn btn-danger btn-sm">
+                                <i class="fas fa-trash"></i> Remove User
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>                 
+        
+            <hr>
+
+            <h3>Register Employee Time Tracker User</h3>
+            <form method="POST" action="/register_time_tracker_user">
+                <div class="mb-3">
+                    <label for="username" class="form-label">Username</label>
+                    <input type="text" name="username" class="form-control" required>
+                </div>
+            
+                <div class="mb-3">
+                    <label for="password" class="form-label">Password</label>
+                    <input type="password" name="password" class="form-control" required>
+                </div>
+            
+                <button type="submit" class="btn btn-primary">Register User</button>
+            </form>
+            
+            <!-- Display Registered Time Tracker Users -->
+            <h3>Registered Users for Employee Time Tracker</h3>
+            <table class="table table-striped table-hover">
+                <thead>
+                    <tr>
+                        <th scope="col">Username</th>
+                        <th scope="col">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for user in time_tracker_users %}
+                    <tr>
+                        <td>{{ user.username }}</td>
+                        <td>
+                            <a href="/remove_time_tracker_user/{{ user.id }}" class="btn btn-danger btn-sm">
+                                <i class="fas fa-trash"></i> Remove User
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>            
+
+        <!-- Hidden Reset Password Form -->
+        <div id="resetPasswordForm" style="display: none;">
+            <h3>Reset User Password</h3>
+            <form method="POST" action="/reset_vehicle_key_user_password">
+                <input type="hidden" name="user_id" id="reset_user_id">
+                
+                <label for="new_password">Enter New Password:</label>
+                <input type="password" name="new_password" id="new_password" class="form-control" required>
+                
+                <button type="submit" class="btn btn-success">
+                    <i class="fas fa-check-circle"></i> Submit
+                </button>
+                <button type="button" onclick="hideResetPasswordForm()" class="btn btn-danger">
+                    <i class="fas fa-times"></i> Cancel
+                </button>                
+            </form>
+        </div>
+        
+        <!-- JavaScript to Show/Hide Reset Password Form -->
+        <script>
+            function showResetPasswordForm(userId) {
+                document.getElementById("reset_user_id").value = userId;
+                document.getElementById("resetPasswordForm").style.display = "block";
+            }
+        
+            function hideResetPasswordForm() {
+                document.getElementById("resetPasswordForm").style.display = "none";
+            }
+        </script>
+        
+        <!-- Hidden Manual Clock-Out Form -->
+        <div id="manualClockOutForm" style="display: none;">
+            <h3>Manual Clock-Out</h3>
+            <form id="clockOutForm" method="POST" action="/manual_clock_out">
+                <input type="hidden" name="employee_id" id="employee_id">
+                
+                <label for="clock_out_time">Enter Clock-Out Time:</label>
+                <input type="datetime-local" name="clock_out_time" id="clock_out_time" required>
+                
+                <button type="submit" class="btn btn-success">
+                    <i class="fas fa-check-circle"></i> Submit
+                </button>
+                <button type="button" onclick="hideClockOutForm()" class="btn btn-danger">
+                    <i class="fas fa-times"></i> Cancel
+                </button>                
+            </form>
+        </div>
+
+        <!-- JavaScript to Show/Hide Form -->
+        <script>
+            function showClockOutForm(employeeId) {
+                // Hide any open forms first
+                hideClockOutForm();
+
+                // Set Employee ID in the form
+                document.getElementById("employee_id").value = employeeId;
+                
+                // Show the form right below the selected employee row
+                let row = document.querySelector(`[data-employee-id='${employeeId}']`);
+                let formContainer = document.getElementById("manualClockOutForm");
+                
+                row.after(formContainer);
+                formContainer.style.display = "block";
+            }
+
+            function hideClockOutForm() {
+                document.getElementById("manualClockOutForm").style.display = "none";
+            }
+        </script>
+
+    </div>
+{% endblock %}
